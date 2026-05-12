@@ -116,7 +116,9 @@ Match the level to the failure mode in both directions. Over-prescribing produce
 
 **Process exhaust stays out of artifacts.** Engineering process metadata — "captured at Phase X.Y" notes, `## Next Steps` pointing to the next skill, italic provenance lines — does not belong in user-facing docs. Doc readers want the doc; they do not need to trace which engineering phase produced which section. Keep skill state in chat (where it is interactive and can be acted on) and durable content in the artifact.
 
-**Distinguish process exhaust from audit content.** Sections that exist for the agent's own bookkeeping are exhaust; sections that exist because downstream readers need to know something about the artifact's authorship are audit content and belong in the doc. The clearest example is non-interactive mode — when no synchronous user confirmed the agent's inferences, those un-validated bets must be visibly labeled in the artifact (e.g., a `## Assumptions` section) so downstream review can scrutinize them as bets rather than mistaking them for user-confirmed decisions. The reader needs that information to do their job; the agent's phase-numbering does not. When evaluating "is this process exhaust?", ask whether removing the section degrades a downstream reader's ability to evaluate the artifact correctly. If yes, it's audit content; keep it.
+**Distinguish process exhaust from audit content.** Sections that exist for the agent's own bookkeeping are exhaust; sections that exist because downstream readers need to know something about the artifact's authorship are audit content and belong in the doc. The test is whether removing the section would degrade a downstream reader's ability to evaluate the artifact correctly.
+
+Non-interactive modes can create audit gaps, but only when the *corresponding interactive mode* would have validated content the headless run skips. Compare per skill, not per mode. If interactive ce-plan walks the user through every requirement and headless ce-plan skips that walkthrough, the headless artifact contains decisions a reader cannot tell weren't user-confirmed — a `## Assumptions` section is audit content. If interactive ce-compound asks only meta-questions (Full vs Lightweight, session-history, "What's next?") while the substantive inferences (track, category, filename, overlap) are agent decisions in both modes, then labeling them only in headless is misleading — it implies interactive runs validated content they didn't. The reader needs to know what *would have been* user-validated; if neither mode validates the inferences, the section is process exhaust dressed up as audit.
 
 **Test the spec by running it, not just by reading it.** Real-world test runs surface failure modes that desk review misses: load reliability, plugin caching across sessions, agent interpretation drift, conflation in menu shapes, edge-case interactions with the user's repo layout. When a test reveals unexpected behavior, ask three questions before tightening the spec:
 
@@ -229,7 +231,8 @@ Why: shell-heavy exploration causes avoidable permission prompts in sub-agent wo
 - [ ] When shell is the only option (e.g., `ast-grep`, `bundle show`, git commands), instruct one simple command at a time — no action chaining (`cmd1 && cmd2`, `cmd1 ; cmd2`) and no error suppression (`2>/dev/null`, `|| true`). Two narrow exceptions: boolean conditions within if/while guards (`[ -n "$X" ] || [ -n "$Y" ]`) are fine — that is normal conditional logic, not action chaining. **Value-producing preparatory commands** (`VAR=$(cmd1) && cmd2 "$VAR"`) are also fine when `cmd2` strictly consumes `cmd1`'s output and splitting would require manually threading the value through model context across bash calls (e.g., `BODY_FILE=$(mktemp -u) && cat > "$BODY_FILE" <<EOF ... EOF`). Simple pipes (e.g., `| jq .field`) and output redirection (e.g., `> file`) are acceptable when they don't obscure failures
 - [ ] **Pre-resolution exception:** `!` backtick pre-resolution commands run at skill load time, not at agent runtime. They may use chaining (`&&`, `||`), error suppression (`2>/dev/null`), and fallback sentinels (e.g., `|| echo '__NO_CONFIG__'`) to produce a clean, parseable value for the model. This is the preferred pattern for environment probes (CLI availability, config file reads) that would otherwise require runtime shell calls with chaining. Three shapes are rejected by Claude Code's safety check and must be avoided in `!` backticks:
   - **`case ... esac`** is rejected as `Contains case_statement`. Use `&&` chaining or pipe-to-sed, or extract to a script.
-  - **`[A] && B || C`** (mixing `&&` and `||` at the same lexical depth) is rejected as `ambiguous syntax with command separators` (issue #710). Wrap the `&&` chain in a subshell so only `||` remains at top level — `(A && B) || C` — or emit the raw value and let the agent's prose decide. Example of the safe shape: `` !`(top=$(...); [ -n "$top" ] && cat "$top/file") || echo '__SENTINEL__'` ``
+  - **`;` (semicolon command separator)** is rejected as `Unhandled node type: ;`. Use `&&` or `||` chaining when those operators express the same intent; extract to a script when unconditional sequencing is genuinely required (`;` is not equivalent to either — it runs the next command regardless of exit code).
+  - **`[A] && B || C`** (mixing `&&` and `||` at the same lexical depth) is rejected as `ambiguous syntax with command separators` (issue #710). Wrap the `&&` chain in a subshell so only `||` remains at top level — `(A && B) || C` — or emit the raw value and let the agent's prose decide. Example of the safe shape: `` !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/path/to/file" 2>/dev/null || echo '__SENTINEL__'` ``
   - **`$(...)` containing a double-quoted string** (e.g., `basename "$(dirname "$common")"`) is rejected as `Unhandled node type: string` (issue #709). Extract the logic to a script under `scripts/` — do NOT replace with parameter expansion (see next bullet).
   - **Bash parameter expansion operators** (`${var%pattern}`, `${var##pattern}`, `${var#pattern}`, `${var%%pattern}`, `${var/pat/repl}`, `${var:-default}`, etc.) are rejected as `Contains expansion`. Simple `${var}` is fine; operators after the variable name are not. This means paths like `${common%/.git}` (strip-suffix) or `${repo##*/}` (strip-prefix) cannot be used in `!` pre-resolution. To derive a directory name or strip a path component, extract to a script.
 
@@ -275,9 +278,9 @@ Plugin config lives at `.compound-engineering/config.local.yaml` in the repo roo
 
 2. **Worktrees:** Gitignored files are per-worktree. A config file created in the main checkout does not exist in worktrees. Use `--show-toplevel` to find the root:
    ```
-   !`(top=$(git rev-parse --show-toplevel 2>/dev/null); [ -n "$top" ] && cat "$top/.compound-engineering/config.local.yaml" 2>/dev/null) || echo '__NO_CONFIG__'`
+   !`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.compound-engineering/config.local.yaml" 2>/dev/null || echo '__NO_CONFIG__'`
    ```
-   The `[ -n "$top" ]` guard matters: outside a git repo, `git rev-parse` emits empty, and an unguarded `cat "/.compound-engineering/config.local.yaml"` would attempt to read from `/`. Guarded, the subshell simply fails and the `__NO_CONFIG__` sentinel takes over.
+   Outside a git repo, `git rev-parse` emits empty and `cat "/.compound-engineering/config.local.yaml"` fails (permission denied or not found, suppressed by `2>/dev/null`), so the `__NO_CONFIG__` sentinel fires. Note: the previous pattern used `(top=$(...); [ -n "$top" ] && cat "$top/...")` with a semicolon to guard the empty-root case, but `;` is rejected by Claude Code's safety checker as `Unhandled node type: ;` (see Pre-resolution exception above) and must not be used in `!` pre-resolution.
 
    Note: in a worktree, `--show-toplevel` returns the worktree path, so config from the main checkout will not be found. This is acceptable — config is optional and users who work from worktrees can add a config file there. A previous pattern used `git-common-dir` with `${common%/.git}` to derive the main repo root as a fallback, but bash parameter expansion operators are rejected as "Contains expansion" (see Pre-resolution exception above), so that approach is no longer viable without a script.
 
@@ -324,6 +327,21 @@ Beta skills use a `-beta` suffix and `disable-model-invocation: true` to prevent
 ### Stable/Beta Sync
 
 When modifying a skill that has a `-beta` counterpart (or vice versa), always check the other version and **state your sync decision explicitly** before committing — e.g., "Propagated to beta — shared test guidance" or "Not propagating — this is the experimental delegate mode beta exists to test." Syncing to both, stable-only, and beta-only are all valid outcomes. The goal is deliberate reasoning, not a default rule.
+
+## Skill Documentation
+
+Many skills have a user-facing doc at `docs/skills/<skill>.md` (repo-root `docs/`, not under `plugins/`) that explains the skill's high-level purpose, novel mechanics, and chain position — separate from the runtime SKILL.md. The `docs/skills/README.md` index lists all documented skills grouped by category.
+
+When modifying such a skill, **state your skill-doc sync decision explicitly** before committing — e.g., "doc updated — added new framing for surprise-me mode" or "doc not updated — change is internal to Phase 2, doesn't surface at doc level." **Most changes don't warrant an update**: internal phase refactors, prompt-tuning, and mechanic-level bug fixes typically don't surface at the doc's level of abstraction.
+
+Update the skill doc when:
+
+- The skill's high-level purpose or framing has shifted
+- A highlighted novel mechanic changed materially or was removed
+- A new mechanic emerged that belongs in "What Makes It Novel"
+- The doc's quick example, FAQ, or use cases would mislead a reader
+
+Edit just the parts that became inaccurate; don't rewrite to match SKILL.md. Skills without a doc need no check — creating one is a deliberate decision, not a reflexive one. When adding a doc for a skill that didn't have one, also link it from the skill's row in `plugins/compound-engineering/README.md` and add it to the appropriate category in `docs/skills/README.md`.
 
 ## Documented Solutions
 

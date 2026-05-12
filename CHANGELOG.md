@@ -1,5 +1,67 @@
 # Changelog
 
+## [3.8.1](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.8.0...cli-v3.8.1) (2026-05-11)
+
+
+### Bug Fixes
+
+* **ce-code-review:** replace resolve-base.sh with prose-driven base detection ([#815](https://github.com/EveryInc/compound-engineering-plugin/issues/815)) ([d090bde](https://github.com/EveryInc/compound-engineering-plugin/commit/d090bde0ff1bbc33ec3c3b2049cb4687e9d76532))
+
+## [3.8.0](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.7.3...cli-v3.8.0) (2026-05-10)
+
+
+### Miscellaneous Chores
+
+* **cli:** Synchronize compound-engineering versions
+
+## [3.7.3](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.7.2...cli-v3.7.3) (2026-05-08)
+
+
+### Bug Fixes
+
+* **ce-resolve-pr-feedback:** paginate GraphQL connections ([#807](https://github.com/EveryInc/compound-engineering-plugin/issues/807)) ([07a6d52](https://github.com/EveryInc/compound-engineering-plugin/commit/07a6d52879ed715e179ff11daaee47e02bc6ecc9))
+
+## [3.7.2](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.7.1...cli-v3.7.2) (2026-05-08)
+
+
+### Bug Fixes
+
+* **ce-sessions:** unblock session-history on Claude Code ([#800](https://github.com/EveryInc/compound-engineering-plugin/issues/800)) ([81710ef](https://github.com/EveryInc/compound-engineering-plugin/commit/81710efad5666831715a630b04554a35946afb1d))
+
+## [3.7.1](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.7.0...cli-v3.7.1) (2026-05-08)
+
+
+### Miscellaneous Chores
+
+* **cli:** Synchronize compound-engineering versions
+
+## [3.7.0](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.6.1...cli-v3.7.0) (2026-05-07)
+
+
+### Miscellaneous Chores
+
+* **cli:** Synchronize compound-engineering versions
+
+## [3.6.1](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.6.0...cli-v3.6.1) (2026-05-06)
+
+
+### Bug Fixes
+
+* **doc-review:** cut review noise on plans, scope personas to doc shape ([#780](https://github.com/EveryInc/compound-engineering-plugin/issues/780)) ([8349e75](https://github.com/EveryInc/compound-engineering-plugin/commit/8349e750b856d267b74fbbeb2fb135e4ff73eb91))
+
+## [3.6.0](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.5.0...cli-v3.6.0) (2026-05-05)
+
+
+### Features
+
+* convert hooks to .codex/hooks.json for Codex target ([#742](https://github.com/EveryInc/compound-engineering-plugin/issues/742)) ([60b66dd](https://github.com/EveryInc/compound-engineering-plugin/commit/60b66dd904c3a81e0a25dd3bc61e2d94d8837f86))
+
+
+### Bug Fixes
+
+* **ce-plan:** render Implementation Units as headings, not bulleted list items ([#766](https://github.com/EveryInc/compound-engineering-plugin/issues/766)) ([be2efd7](https://github.com/EveryInc/compound-engineering-plugin/commit/be2efd7d7605c483ea9f068c6190b81a9d68e942))
+* **ce-worktree:** resolve script path against skill dir, not user CWD ([#772](https://github.com/EveryInc/compound-engineering-plugin/issues/772)) ([4cc1ee6](https://github.com/EveryInc/compound-engineering-plugin/commit/4cc1ee6fe2a353cd0b8e7466ec27e9556b042ee3))
+
 ## [3.5.0](https://github.com/EveryInc/compound-engineering-plugin/compare/cli-v3.4.2...cli-v3.5.0) (2026-05-04)
 
 
