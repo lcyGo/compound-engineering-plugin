@@ -300,23 +300,24 @@ These are examples, not requirements — the agent picks what each
 artifact's content warrants. Other affordances not listed here are
 fine when the content suggests them.
 
-- **Sticky TOC sidebar with active-section indicator** — *expected* for
-  substantial docs (5+ top-level sections OR ~400+ rendered lines), not
-  optional. A static TOC at the top of a long doc disappears on scroll
-  and leaves the reader unable to navigate without scrolling back —
-  every implementation plan, requirements doc, or design doc past the
-  substantial threshold needs persistent navigation. Two-column layout
-  on desktop, collapsed to top-of-page on mobile, paired with a small
-  inline `IntersectionObserver` script that toggles `.active` on the
-  matching nav anchor. A small inline `<script>` for this purpose is
-  explicitly permitted (see "No JS framework runtimes" above — the ban
-  is on framework runtimes, not on ~20-line vanilla JS).
+- **Sticky TOC sidebar with active-section indicator** — available when
+  the agent judges navigation will materially help and the
+  implementation is reliable: two-column layout on desktop, collapsed
+  to top-of-page on mobile, paired with a small inline
+  `IntersectionObserver` script that toggles `.active` on the matching
+  nav anchor. Trade-off: a broken sticky TOC (layout collisions,
+  active-section state drift, dark-mode CSS issues) is worse than a
+  static top-of-doc TOC. For most long docs, default-closed `<details>`
+  on repeating cards (see Implementation Units anatomy) already cuts
+  the visible scroll length enough that a static TOC works — reach for
+  sticky only when collapsibles alone don't solve the navigation
+  problem.
 - **Within-section sub-nav** for sections containing 6+ repeating cards
   (Implementation Units, KTDs, Risks at large counts). A short list of
-  card-anchor links rendered at the top of the section gives readers a
-  jump table — without it, a 10-unit section becomes a long scroll
-  even with collapsibles. The sub-nav lives inside the section, just
-  below the section heading.
+  card-anchor links (`<ul>` of `<a href="#u1">U1. ...</a>`) rendered at
+  the top of the section gives readers a jump table — no JS needed.
+  Lower-complexity alternative to the sticky TOC for the specific case
+  of long card sections.
 - **Eyebrow labels** (small-caps tag above section titles) for
   editorial polish, especially when section titles are narrative
   rather than literal.
@@ -383,9 +384,6 @@ Before returning the artifact, scan it for common slips:
   (downstream agents grep these).
 - **Source / composition signal** is present as a visible footer at
   the bottom of the doc (composition timestamp + source identifier).
-- **Sticky TOC with active-section indicator is present** when the doc
-  is substantial (5+ top-level sections OR ~400+ rendered lines). A
-  static top-of-doc TOC is not sufficient at this scale.
 - **Repeating cards with 3+ instances put secondary content inside
   default-closed `<details>`.** Fully-expanded unit cards in a long
   Implementation Units section is a failure mode — the reader can't see
@@ -398,8 +396,9 @@ Before returning the artifact, scan it for common slips:
 - **`<details>`** inside repeating cards have no `open` attribute.
 - **Diagram labels** are legible — no arrow paths crossing text,
   halo width appropriate for font size.
-- **No JS framework runtimes** included (small inline IntersectionObserver
-  for the sticky TOC is the only acceptable JS).
+- **No JS framework runtimes** included. Small inline `<script>` for
+  active-section TOC tracking or anchor-permalink behavior is the only
+  acceptable JS.
 - **Each heading level** is visually distinct from others and from
   inline bold.
 - **No template placeholders** (`{skill}`, `<value>`, `[plan title]`)

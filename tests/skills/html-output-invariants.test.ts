@@ -98,22 +98,6 @@ describe("html-rendering.md reference content invariants", () => {
     ).toBe(true)
   })
 
-  test("sticky TOC expected for substantial docs", () => {
-    // 2026-05-17 supply-chain plan dogfood failure: 823-line HTML doc with
-    // 11 top-level sections rendered a static top-of-doc TOC that disappeared
-    // on scroll. The reference now promotes sticky TOC from "affordance
-    // idiom" to "expected for substantial docs" and includes the substantial
-    // threshold so the rule has a concrete trigger.
-    expect(
-      /Sticky TOC.*expected|expected.*sticky TOC|sticky TOC.*not optional/i.test(REFERENCE),
-      "Reference must mark sticky TOC as expected (not optional) for substantial docs.",
-    ).toBe(true)
-    expect(
-      /5\+ top-level sections|400\+ rendered lines|substantial threshold/i.test(REFERENCE),
-      "Reference must name the substantial-doc threshold (5+ sections OR ~400+ lines) that triggers the sticky-TOC expectation.",
-    ).toBe(true)
-  })
-
   test("repeating cards with 3+ instances use default-closed <details>", () => {
     // 2026-05-17 supply-chain plan dogfood failure: 8 Implementation Units
     // rendered fully expanded with no collapsibles. Reader can't see the
@@ -285,8 +269,6 @@ describe("html-rendering.md reference content invariants", () => {
     expect(/[Ss]ection heading vocabulary/i.test(auditRegion)).toBe(true)
     // Source / composition signal check (the visible-footer rule)
     expect(/Source \/ composition signal|composition signal.*present|visible footer/i.test(auditRegion)).toBe(true)
-    // Sticky TOC for substantial docs check
-    expect(/[Ss]ticky TOC.*substantial|substantial.*sticky TOC|active-section indicator/i.test(auditRegion)).toBe(true)
     // Default-closed collapsibles for 3+ repeating cards check
     expect(/3\+ instances.*default-closed|repeating cards.*3\+ instances/i.test(auditRegion)).toBe(true)
     // Within-section sub-nav for 6+ cards check
