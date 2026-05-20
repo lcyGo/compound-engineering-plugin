@@ -139,6 +139,47 @@ describe("html-rendering.md reference content invariants", () => {
     expect(/\.compound-engineering\/DESIGN\.md/.test(REFERENCE)).toBe(true)
   })
 
+  test("DESIGN.md is a partial override (use what fits, skip the rest)", () => {
+    // 2026-05-20: reviewing a real product DESIGN.md (every.to brand tokens)
+    // surfaced three failure modes the binary present/absent rule didn't
+    // cover: scope mismatch (product-UI surface colors applied to docs),
+    // partial coverage (DESIGN.md defines some categories but not others),
+    // and unfetchable named fonts (brand fonts without a CDN source). The
+    // reference must teach the agent to apply what fits and skip what
+    // doesn't.
+    expect(
+      /partial override|use what fits|not all-or-nothing/i.test(REFERENCE),
+      "Reference must state DESIGN.md is a partial override, not all-or-nothing.",
+    ).toBe(true)
+  })
+
+  test("DESIGN.md scope-mismatch guard (product UI vs doc surface)", () => {
+    // Specific failure mode: an agent reading a product-UI DESIGN.md may
+    // naively lift the page-surface color (e.g., a marketing brand color)
+    // and apply it as the plan-doc background. The reference must name
+    // this case and instruct the agent to extract the principle, not the
+    // literal value, when the token is product-UI-scoped.
+    expect(
+      /Scope mismatch|product UI vs doc surface|product-UI-scoped/i.test(REFERENCE),
+      "Reference must call out the product-UI vs doc-surface scope mismatch.",
+    ).toBe(true)
+    expect(
+      /extract\s+the\s+principle[\s\S]{0,100}(not|rather\s+than)\s+the\s+literal/i.test(REFERENCE),
+      "Reference must instruct the agent to extract the principle, not (or rather than) the literal value, when a token is product-UI-scoped.",
+    ).toBe(true)
+  })
+
+  test("DESIGN.md unfetchable-named-font fallback", () => {
+    // When DESIGN.md names a font without a CDN source the agent can
+    // inline, the agent must emit a system-font stack in the same family
+    // rather than linking out (single-file invariant) or ignoring the
+    // hint entirely.
+    expect(
+      /Named font without a fetchable source|named font.*hint|system-font stack/i.test(REFERENCE),
+      "Reference must handle DESIGN.md fonts without a fetchable source by treating the name as a hint and emitting a system-font stack.",
+    ).toBe(true)
+  })
+
   test("markdown is content, not design", () => {
     expect(
       /Markdown source is content, not design|source of content, not a source of design|do NOT treat its bullet|re-choose the rendering/i.test(REFERENCE),

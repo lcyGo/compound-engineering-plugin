@@ -112,6 +112,37 @@ Worktree-root only — do not fall through to a main checkout. Users
 working from a worktree who want HTML defaults can add DESIGN.md to the
 worktree.
 
+**DESIGN.md is a partial override, not all-or-nothing.** Real
+DESIGN.md files vary widely: some are token tables, some are CSS
+variables, some are prose; most cover a subset of what HTML composition
+needs. Apply the tokens that fit a long-form text doc — typography roles,
+text colors, contrast targets, border-radius scale, elevation primitives,
+muted-vs-accent split. Skip the rest. Three specific failure modes to
+defend against:
+
+- **Scope mismatch (product UI vs doc surface).** A DESIGN.md aimed at
+  product marketing or app UI may name page-surface colors, button
+  states, input borders, or hero backgrounds that are tied to *that*
+  surface, not to a generic doc. Page-surface colors are the canonical
+  trap — `--surface: #c0f0fb` belongs on the product's marketing page,
+  not on every plan or requirements doc the team writes. Extract the
+  principle (the design language uses a tinted surface) rather than the
+  literal value when the token is product-UI-scoped. Apply literal
+  values only when the token is generic enough to transfer (text color,
+  type scale ratio, radius scale, contrast ratio).
+- **Partial coverage.** When DESIGN.md defines some categories but not
+  others (e.g., colors but no spacing scale, typography but no
+  elevation), use DESIGN.md for what it covers and the fallback default
+  for what it doesn't. Do not require DESIGN.md to be complete before
+  honoring it.
+- **Named font without a fetchable source.** When DESIGN.md names a
+  font (e.g., "Signifier", "Every") without a CDN URL or local
+  `@font-face` source the agent can inline, treat the name as a hint
+  about the design intent, not a literal directive. Emit a system-font
+  stack in the same family (serif vs sans vs mono) and pick a weight
+  that matches the intent. The single-file invariant still holds; do
+  not link to an external stylesheet to fetch the named font.
+
 ## Format principles
 
 These shape what "good" HTML looks like; the agent applies them per
