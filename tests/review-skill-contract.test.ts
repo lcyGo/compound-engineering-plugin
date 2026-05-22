@@ -487,26 +487,6 @@ describe("ce-code-review contract", () => {
     expect(content).toMatch(/mode-aware demotion/)
   })
 
-  test("P3 severity findings are suppressed from report output", async () => {
-    const skill = await readRepoFile("plugins/compound-engineering/skills/ce-code-review/SKILL.md")
-    const template = await readRepoFile(
-      "plugins/compound-engineering/skills/ce-code-review/references/review-output-template.md",
-    )
-    const subagent = await readRepoFile(
-      "plugins/compound-engineering/skills/ce-code-review/references/subagent-template.md",
-    )
-    const schema = await readRepoFile(
-      "plugins/compound-engineering/skills/ce-code-review/references/findings-schema.json",
-    )
-
-    expect(skill).toMatch(/6d\.\s+\*\*P3 severity suppression/i)
-    expect(skill).toMatch(/Do not render a P3 section/i)
-    expect(skill).toMatch(/P3 suppressions/i)
-    expect(template).toMatch(/Do not render P3/i)
-    expect(subagent).toMatch(/Do not emit P3/i)
-    expect(schema).toMatch(/Do not emit — suppressed during synthesis/i)
-  })
-
   test("personas use anchored rubric language and no float references remain", async () => {
     const personas = [
       "ce-correctness-reviewer",

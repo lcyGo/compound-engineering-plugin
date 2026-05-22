@@ -60,7 +60,7 @@ Persona selection is agent judgment, not keyword matching. Instruction-prose fil
 
 ### 2. Severity (P0-P3) and autofix class are orthogonal
 
-Severity answers **urgency** (P0=critical breakage through P2=moderate traps worth fixing). **P3 is not surfaced** — personas omit low-impact discretionary items, and synthesis drops any P3 that slips through (count recorded in Coverage only). The autofix class answers **who acts next**:
+Severity answers **urgency** (P0=critical breakage, P3=user discretion). The autofix class answers **who acts next**:
 
 - `safe_auto` → `review-fixer` enters the in-skill fixer queue automatically (only when mode allows mutation)
 - `gated_auto` → fix exists but changes behavior, contracts, or sensitive boundaries — routes to a downstream resolver or human
@@ -94,7 +94,6 @@ After all dispatched personas return, synthesis:
 - **Promotes confidence on cross-persona agreement** (two reviewers spotting the same issue raises priority)
 - Resolves contradictions (different personas disagree about what to do)
 - Auto-promotes safe-auto candidates that meet the bar
-- **Suppresses P3** findings from the report (Coverage count only)
 - Routes by tier — applied fixes, gated/manual, FYI
 
 The output is one report with calibrated severity, evidence quotes, and explicit ownership — not a flat list of every reviewer's raw output.

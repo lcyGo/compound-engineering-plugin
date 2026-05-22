@@ -84,7 +84,7 @@ SELECT COUNT(*) FROM <table_name>
 WHERE new_column IS NULL AND created_at > NOW() - INTERVAL '1 hour';
 ```
 
-Flag missing verification for risky transforms as **P2** `manual` with sample SQL in `suggested_fix`. Do not emit P3.
+Flag missing verification for risky transforms as **P2** `manual` with sample SQL in `suggested_fix`.
 
 ## Confidence calibration
 
