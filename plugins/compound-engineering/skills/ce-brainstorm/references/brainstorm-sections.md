@@ -147,6 +147,41 @@ The agent also picks per artifact:
 (Requirements grouping is covered above in the Hard Floor item — group by
 concern when they span distinct areas, with continuous R-IDs across groups.)
 
+## Brainstorm metadata fields
+
+Every brainstorm carries a small set of stable metadata fields that
+downstream tooling depends on. The contract is format-independent: in
+markdown these fields appear as YAML frontmatter at the top of the file; in
+HTML they appear as visible header text (typically a `<dl>` of `<dt>`/`<dd>`
+pairs or a stats strip). Field names and semantics are the same across both
+formats so consumers can locate them without knowing which format produced
+the brainstorm.
+
+### Required
+
+- **`date`** — creation date in ISO 8601 (`YYYY-MM-DD`), ASCII digits only.
+  Used in the filename (`docs/brainstorms/YYYY-MM-DD-<topic>-requirements.<md|html>`).
+- **`topic`** — kebab-case slug identifying the brainstorm subject (e.g.,
+  `surface-scope-earlier`, `demo-reel-local-save`). Used in the filename
+  alongside `date` and as the resume-detection key when `ce-brainstorm`'s
+  Phase 0.1 scans `docs/brainstorms/` for an existing artifact to continue.
+
+### Status flip does not apply to brainstorm
+
+Unlike plans, brainstorm artifacts have no `status` field — there is no
+`active → completed` lifecycle. A brainstorm is a one-time output that
+downstream consumers (`ce-plan`, `ce-doc-review`) reference via the plan's
+`origin:` field. The `<span class="status">` HTML hook described in
+`html-rendering.md` is a plan-side mechanic and does not render on
+brainstorm artifacts.
+
+### Field-name stability
+
+Field names are stable across brainstorm revisions — never rename a field
+or repurpose its semantics. Agents composing new brainstorms MUST use these
+exact names; adding new fields is fine, but renaming `topic` to `subject`
+or `date` to `created` breaks filename construction and resume detection.
+
 ## ID and content rules
 
 Same shape as plan rules.

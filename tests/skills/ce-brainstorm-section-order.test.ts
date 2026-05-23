@@ -59,3 +59,37 @@ describe("ce-brainstorm Key Decisions placement", () => {
     ).toBe(true)
   })
 })
+
+// Mirror of the plan-sections.md metadata test on the ce-plan side
+// (`plan-sections.md enumerates the required plan metadata fields by name`).
+// PR #826 split the prescriptive requirements-capture.md into a section
+// contract (brainstorm-sections.md) + format-rendering refs.
+// markdown-rendering.md now says "Per-skill frontmatter fields are defined
+// in each skill's section contract" — so brainstorm-sections.md MUST
+// actually list them or downstream consumers that key on these field names
+// (filename construction via `date`+`topic`, Phase 0.1 resume detection)
+// break silently when agents compose brainstorms from the new refs.
+describe("ce-brainstorm metadata field contract", () => {
+  test("brainstorm-sections.md enumerates the required brainstorm metadata fields by name", () => {
+    // Required field names that downstream consumers depend on.
+    for (const field of ["date", "topic"]) {
+      expect(
+        new RegExp(`\\b${field}\\b`).test(BODY),
+        `brainstorm-sections.md must name the required '${field}' metadata field — downstream tooling keys on it (filename construction, resume detection).`,
+      ).toBe(true)
+    }
+  })
+
+  test("brainstorm-sections.md states that the status flip mechanic does not apply", () => {
+    // The shared HTML rendering reference describes `<span class="status">`
+    // as a load-bearing hook for ce-work's active → completed flip. That
+    // mechanic is plan-side; brainstorm has no status lifecycle. The
+    // contract must say so explicitly so an agent reading
+    // brainstorm-sections.md + html-rendering.md together doesn't invent
+    // a status field for brainstorm artifacts.
+    expect(
+      /no `?status`? field|status flip does not apply|no.*active.*completed|plan-side mechanic/i.test(BODY),
+      "brainstorm-sections.md must explicitly state that the `status` field / `active → completed` flip mechanic does not apply to brainstorms.",
+    ).toBe(true)
+  })
+})

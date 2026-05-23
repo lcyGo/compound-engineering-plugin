@@ -101,12 +101,14 @@ If the initial upload fails (network error, Proof API down), retry once after a 
 
 Use the closing summary only when this run of the workflow is ending or handing off, not when returning to the Phase 4 options.
 
+In both templates below, substitute `<absolute path to requirements doc>` with the actual file path written this run — `.md` for `OUTPUT_FORMAT=md`, `.html` for `OUTPUT_FORMAT=html`. Do not emit a hardcoded `.md` path when the artifact is HTML, or the closing summary will point users at a file that was never written.
+
 When complete and ready for planning, display:
 
 ```text
 Brainstorm complete!
 
-Requirements doc: docs/brainstorms/YYYY-MM-DD-<topic>-requirements.md  # if one was created
+Requirements doc: <absolute path to requirements doc>  # omit line if no doc was created
 
 Key decisions:
 - [Decision 1]
@@ -120,7 +122,7 @@ If the user pauses with `Resolve Before Planning` still populated, display:
 ```text
 Brainstorm paused.
 
-Requirements doc: docs/brainstorms/YYYY-MM-DD-<topic>-requirements.md  # if one was created
+Requirements doc: <absolute path to requirements doc>  # omit line if no doc was created
 
 Planning is blocked by:
 - [Blocking question 1]

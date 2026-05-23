@@ -11,7 +11,7 @@ This file contains post-plan-writing instructions: document review, post-generat
 - `proposed_fixes_count = 0`, `decisions_count = 0`, `fyi_count = 0`
 - `skipped_reason = "output_format_html"`
 
-Then proceed directly to Final Checks (5.3.9). Do not block on this — the confidence check at 5.3 already strengthened the plan, and the user can request review explicitly via the post-generation menu's free-form input.
+Then proceed directly to Final Checks (5.3.9). Do not block on this — the confidence check at 5.3 already strengthened the plan. Free-form requests for review in the post-generation menu will be declined for HTML runs with a prompt to switch to `output:md` (see 5.4); review is not available for HTML plans until ce-doc-review gains HTML-aware mutation.
 
 **When `OUTPUT_FORMAT=md`:** Run the `ce-doc-review` skill with `mode:headless` on the plan file. Pass `mode:headless <plan-path>` as the skill arguments. When this step is reached for a markdown plan, it is mandatory — do not skip it because the confidence check already ran. The two tools catch different classes of issues.
 

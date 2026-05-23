@@ -157,6 +157,49 @@ The agent also picks per artifact:
 - Whether HTD has one diagram, several, or none — and whether visualizations
   live in HTD or embedded in other sections
 
+## Plan metadata fields
+
+Every plan carries a small set of stable metadata fields that downstream
+tooling depends on. The contract is format-independent: in markdown these
+fields appear as YAML frontmatter at the top of the file; in HTML they
+appear as visible header text (typically a `<dl>` of `<dt>`/`<dd>` pairs or
+a stats strip). Field names and semantics are the same across both formats
+so consumers can locate them without knowing which format produced the
+plan.
+
+### Required
+
+- **`title`** — verbatim plan title. Matches the H1 (markdown) or document
+  `<h1>` (HTML) so file metadata and visible heading don't drift.
+- **`type`** — conventional-commit-prefix-aligned classification (`feat`,
+  `fix`, `refactor`, `chore`, `docs`, `perf`, `test`, etc.). Carries the
+  intent the eventual commit message should reflect.
+- **`status`** — `active` on creation; `ce-work` flips to `completed` on
+  ship. `ce-plan`'s Phase 0.1 resume fast path keys on `active`. In HTML,
+  status MUST render as `<span class="status">{value}</span>` so the flip
+  mechanic can locate and rewrite it by selector (see
+  `references/html-rendering.md`).
+- **`date`** — creation date in ISO 8601 (`YYYY-MM-DD`), ASCII digits only.
+
+### Optional but well-known
+
+These fields are not required, but when set they have fixed names and
+semantics so downstream tooling can rely on them:
+
+- **`origin`** — repo-relative path to an upstream brainstorm requirements
+  doc (e.g., `docs/brainstorms/2026-05-12-pagination-requirements.md`).
+  Set when planning from an upstream brainstorm; carried for traceability
+  and re-resolved when `ce-plan` re-deepens. The HITL Proof flow uses
+  `origin` to trace back to the source brainstorm.
+- **`deepened`** — ISO 8601 date marking the first time the confidence
+  check substantively strengthened the plan. Presence affects Phase 0.1
+  resume fast-path logic (see `references/deepening-workflow.md`).
+
+Field names are stable across plan revisions — never rename a field or
+repurpose its semantics. Agents composing new plans MUST use these exact
+names; adding new fields is fine, but renaming `status` to `state` or
+`origin` to `source` breaks the downstream consumers above.
+
 ## ID and content rules
 
 These apply regardless of rendering format.

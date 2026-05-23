@@ -14,6 +14,11 @@ const HTML_RENDERING_PATH = path.join(
   "plugins/compound-engineering/skills/ce-plan/references/html-rendering.md",
 )
 
+const PLAN_SECTIONS_PATH = path.join(
+  process.cwd(),
+  "plugins/compound-engineering/skills/ce-plan/references/plan-sections.md",
+)
+
 // Regression guard for the `output:html` / `output:md` argument on ce-plan.
 // Under exclusive output mode, the plan is written as EITHER markdown OR
 // HTML — never both. The skill body must carry the load-bearing surface:
@@ -193,6 +198,43 @@ describe("ce-plan output:html mode", () => {
       /OUTPUT_FORMAT_SOURCE/.test(SKILL_BODY),
       "SKILL.md must not reference OUTPUT_FORMAT_SOURCE — the source-tracking variable existed only to support sibling-rerender logic which is removed under exclusive output mode.",
     ).toBe(false)
+  })
+
+  test("plan-sections.md enumerates the required plan metadata fields by name", () => {
+    // PR #826 split the prescriptive plan-template.md into a section contract
+    // (plan-sections.md) + format-rendering refs. markdown-rendering.md now
+    // says "Per-skill frontmatter fields are defined in each skill's section
+    // contract" — so plan-sections.md MUST actually list them or downstream
+    // tooling that keys on these field names (Phase 0.1 resume fast path on
+    // `status: active`, ce-work's active→completed flip, deepening's
+    // `deepened: YYYY-MM-DD`, HITL Proof's `origin:` traceback) breaks
+    // silently when agents compose plans from the new refs.
+    const body = readFileSync(PLAN_SECTIONS_PATH, "utf8")
+
+    // Required field names that downstream consumers depend on.
+    for (const field of ["title", "type", "status", "date"]) {
+      expect(
+        new RegExp(`\\b${field}\\b`).test(body),
+        `plan-sections.md must name the required '${field}' metadata field — downstream tooling keys on it.`,
+      ).toBe(true)
+    }
+
+    // Optional but well-known fields whose names are load-bearing for
+    // resume/traceback flows.
+    for (const field of ["origin", "deepened"]) {
+      expect(
+        new RegExp(`\\b${field}\\b`).test(body),
+        `plan-sections.md must name the optional '${field}' metadata field — its presence and exact name are load-bearing for downstream flows.`,
+      ).toBe(true)
+    }
+
+    // The contract must explicitly state that status flips active → completed
+    // so the field's mutability isn't lost when an agent reads the contract
+    // without the markdown-rendering reference.
+    expect(
+      /active.*completed|completed.*active/i.test(body),
+      "plan-sections.md must state the status field's active → completed transition so the mutability semantics survive on their own.",
+    ).toBe(true)
   })
 
   test("html-rendering.md reference exists and is loadable", () => {
