@@ -23,16 +23,16 @@ related_pr: https://github.com/EveryInc/compound-engineering-plugin/pull/747
 
 ## Problem
 
-`plugins/compound-engineering/AGENTS.md` already stated that "all skills and agents use the `ce-` prefix to unambiguously identify them as compound-engineering components." But the rule was prose-only, and three legacy skills (`every-style-editor`, `file-todos`, `lfg`) sit unprefixed in the same directory as their `ce-`-prefixed siblings. The combination — a soft rule plus visible exceptions — let a new skill (`riffrec-feedback-analysis`) ship in PR #747 without the prefix. The user caught it post-merge of the first commit, requiring a rename commit on the same PR.
+`plugins/compound-engineering/AGENTS.md` already stated that "all skills and agents use the `ce-` prefix to unambiguously identify them as compound-engineering components." But the rule was prose-only, and legacy skills sat unprefixed in the same directory as their `ce-`-prefixed siblings. The combination — a soft rule plus visible exceptions — let a new skill (`riffrec-feedback-analysis`) ship in PR #747 without the prefix. The user caught it post-merge of the first commit, requiring a rename commit on the same PR. (That skill is now `ce-riffrec-feedback-analysis`; the once-unprefixed `every-style-editor` and `file-todos` skills have since been removed, leaving `lfg` as the sole exemption.)
 
-A prose convention that has visible counterexamples and no machine check is, in practice, an *advisory* convention. Any author skim-reading the directory listing sees `every-style-editor` next to `ce-brainstorm` and reasonably concludes the prefix is optional.
+A prose convention that has visible counterexamples and no machine check is, in practice, an *advisory* convention. Any author skim-reading the directory listing sees an unprefixed skill next to `ce-brainstorm` and reasonably concludes the prefix is optional.
 
 ## Root cause
 
 Two layered problems:
 
 1. **The rule was unenforced.** Nothing in CI or the test suite would fail when a non-`ce-` skill was added. The frontmatter test asserts that the skill's `name:` matches its directory and that the directory uses `[a-z0-9-]+`, but does not check for the `ce-` prefix.
-2. **The exception list was implicit.** Three legacy skills predate the rule. Without an explicit allowlist, "predates the rule" looks identical to "the rule doesn't apply" when reading the filesystem.
+2. **The exception list was implicit.** Legacy skills predated the rule. Without an explicit allowlist, "predates the rule" looks identical to "the rule doesn't apply" when reading the filesystem.
 
 ## Solution
 
@@ -40,46 +40,33 @@ Make the rule mechanically enforced and pin the exceptions explicitly.
 
 ### 1. Test enforcement
 
-Added to `tests/frontmatter.test.ts` inside the existing `frontmatter YAML validity` block:
+Enforcement lives in a dedicated test file, `tests/skill-agent-ce-prefix.test.ts`, which walks the skill directories and agent files and asserts the prefix on both the directory/file name and the frontmatter `name`. Exemptions are explicit, named `Set`s that require a written reason per entry:
 
 ```ts
-if (pluginRoot === "plugins/compound-engineering") {
-  const SKILL_PREFIX_ALLOWLIST = new Set([
-    "every-style-editor",
-    "file-todos",
-    "lfg",
-  ])
-  test(`${pluginRoot}/${rel} skill name uses ce- prefix`, () => {
-    const dirName = path.basename(path.dirname(rel))
-    if (SKILL_PREFIX_ALLOWLIST.has(dirName)) return
-    expect(
-      dirName.startsWith("ce-"),
-      `Skill "${dirName}" must use the ce- prefix. ` +
-        `If this is a legacy skill that predates the rule, add it to ` +
-        `SKILL_PREFIX_ALLOWLIST in tests/frontmatter.test.ts.`,
-    ).toBe(true)
-  })
-}
+const PREFIX = "ce-"
+
+// Exemptions from the ce- prefix rule. Add entries here only with a written
+// reason — the exemption list shouldn't become a silent junk drawer.
+const SKILL_EXEMPTIONS = new Set<string>([
+  // lfg ships as the public command `/lfg` (see plugins/compound-engineering/README.md).
+  "lfg",
+])
+const AGENT_EXEMPTIONS = new Set<string>([])
 ```
 
-A parallel test at the agent level (no allowlist, since every existing agent already conforms):
+Agents are flat `.md` files under `plugins/compound-engineering/agents/`, filtered by extension and checked the same way as skills:
 
 ```ts
-if (
-  pluginRoot === "plugins/compound-engineering" &&
-  /^agents\/[^/]+\.agent\.md$/.test(rel)
-) {
-  test(`${pluginRoot}/${rel} agent name uses ce- prefix`, () => {
-    const fileName = path.basename(rel, ".agent.md")
-    expect(
-      fileName.startsWith("ce-"),
-      `Agent "${fileName}" must use the ce- prefix.`,
-    ).toBe(true)
-  })
-}
+const agentFiles = readdirSync(AGENTS_DIR, { withFileTypes: true })
+  .filter((entry) =>
+    entry.isFile() &&
+    entry.name.endsWith(".md") &&
+    !AGENT_EXEMPTIONS.has(entry.name),
+  )
+  .map((entry) => entry.name)
 ```
 
-The test failure message tells the author exactly what to do — either rename the skill or, if it is genuinely legacy, edit the allowlist (which a reviewer can then push back on).
+Each failure message points at the `AGENTS.md` "Naming Convention" section so the author knows where the rule is documented and how to add a justified exemption. (A parallel copy of the skill/agent checks also lives in `tests/frontmatter.test.ts`; the dedicated file is the canonical home.)
 
 ### 2. Strengthened prose
 
@@ -87,7 +74,7 @@ Updated `plugins/compound-engineering/AGENTS.md` to call the prefix mandatory, n
 
 ### 3. Persistent author memory
 
-Saved a feedback memory at `~/.claude/projects/-Users-kieranklaassen-compound-engineering-plugin/memory/feedback_ce_prefix_required.md` so future sessions on this repo load the rule automatically and apply it before the test fires.
+Saved a feedback memory in the agent's per-project memory store so future sessions on this repo load the rule automatically and apply it before the test fires. (The exact memory path is machine- and user-specific; the durable point is that the rule lives in author memory as well as in prose and tests.)
 
 ## Prevention
 
@@ -106,5 +93,5 @@ The allowlist pattern is preferred when migration is risky (renaming an installe
 ## Related
 
 - `plugins/compound-engineering/AGENTS.md` — Naming Convention section now documents the rule and the allowlist.
-- `tests/frontmatter.test.ts` — implements the enforcement.
+- `tests/skill-agent-ce-prefix.test.ts` — the dedicated test that implements the enforcement (a parallel copy also lives in `tests/frontmatter.test.ts`).
 - PR #747 — the original mistake and the rename + enforcement that came with it.
