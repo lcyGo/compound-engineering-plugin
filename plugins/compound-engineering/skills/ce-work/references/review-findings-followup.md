@@ -2,7 +2,7 @@
 
 Load this reference when Tier 2 `ce-code-review` has finished and **ce-work** (or another caller) should apply fixes before the Residual Work Gate.
 
-`ce-code-review` is **review-only** — it reports findings and writes artifacts; it does not mutate the checkout, commit, push, or file tickets. **The caller owns apply/fix policy.**
+`ce-code-review` is invoked here with `mode:agent`, so it is **review-only** in this context — it reports findings and writes artifacts and does not mutate the checkout, commit, push, or file tickets. **The caller owns apply/fix policy.** (In its own default/interactive mode the review applies safe fixes itself; that path does not apply here.)
 
 ## Consume the completed review (do not re-run it)
 

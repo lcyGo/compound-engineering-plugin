@@ -127,7 +127,7 @@ This fails because: no pipe-delimited tables, no severity-grouped `###` headers,
 - **Confidence column** shows the finding's anchor as an integer (`50`, `75`, or `100`). Never render as a float.
 - **No `Route` column in the per-severity tables** -- the synthesized route (``<autofix_class> -> <owner>``) appears only in the Actionable Findings table and the `mode:agent` JSON. The scannable severity tables are 5 columns: `# | File | Issue | Reviewer | Confidence`.
 - **Header includes** scope, intent, and reviewer team with per-conditional justifications
-- **Mode line** -- include `interactive`, `report-only`, or `agent`
+- **Mode line** -- include `interactive` or `agent`
 - **Applied section (default mode only)** -- when the review applied fixes (Stage 5c), list them first, before the severity tables, as `# | File | Fix | Reviewer` followed by a one-line validation outcome (e.g. "suite 214 pass, lint clean"). Flag green-but-unverifiable edits (auth/contract/concurrency) prominently. Applied findings keep their stable `#` and appear only here, not in the severity tables. Omit in `mode:agent` and when nothing was applied
 - **Actionable Findings section** -- include when the actionable queue is non-empty (findings for the caller to handle)
 - **Pre-existing section** -- separate table, no confidence column (these are informational)

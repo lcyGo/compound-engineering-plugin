@@ -611,7 +611,7 @@ Do not spawn stack reviewers mechanically from file extensions alone. The trigge
 
 ## After Review
 
-Review-only handoff. After Stage 6, stop. Do not edit project files, file tickets, commit, push, or open PRs from this skill. Callers (for example `ce-work`) and the user apply fixes, file tickets, or accept residual risk using the report and artifact.
+After Stage 6, stop. Never commit, push, open PRs, or file tickets from this skill. In default (interactive) mode, Stage 5c has already applied the safe fixes (Applied section) and left them unstaged for the user to commit. In `mode:agent` the review mutates nothing — the caller (for example `ce-work`) and the user apply fixes, file tickets, or accept residual risk using the report and artifact.
 
 ### Emit actionable findings summary
 

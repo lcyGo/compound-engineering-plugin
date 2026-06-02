@@ -18,7 +18,6 @@ describe("ce-code-review contract", () => {
     expect(content).toContain("mode:headless")
     expect(content).toContain("/tmp/compound-engineering/ce-code-review/<run-id>/")
     expect(content).toMatch(/Never commit, push, create PRs, or file tickets/i)
-    expect(content).toMatch(/never mutates the tree/i)
     expect(content).toContain("run artifact")
     expect(content).toMatch(/check out the PR branch/i)
     expect(content).toMatch(/Never run `gh pr checkout`/i)
@@ -50,8 +49,7 @@ describe("ce-code-review contract", () => {
     expect(content).toContain('"status": "complete"')
     expect(content).toContain("review.json")
 
-    // Never ship from this skill (any mode); apply only in default, report-only in mode:agent
-    expect(content).toMatch(/Never commit, push, create PRs, or file tickets/i)
+    // mode:agent never mutates; default mode applies safe fixes (this test owns the mutate-contract assertions)
     expect(content).toMatch(/never mutates the tree/i)
     expect(content).toMatch(/default \(interactive\).{0,4}mode the review may/i)
 
@@ -72,7 +70,7 @@ describe("ce-code-review contract", () => {
   test("documents policy-driven routing and actionable handoff", async () => {
     const content = await readRepoFile("plugins/compound-engineering/skills/ce-code-review/SKILL.md")
 
-    // Routing taxonomy — review-only; callers apply fixes
+    // Action Routing: autofix_class is signal only; mode:agent never mutates, default applies
     expect(content).toContain("## Action Routing")
     expect(content).toMatch(/this skill does not mutate the checkout/i)
     expect(content).toContain("references/action-class-rubric.md")

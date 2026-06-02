@@ -90,7 +90,6 @@ After all dispatched personas return, synthesis:
 - Deduplicates across personas (same issue surfaced by multiple reviewers)
 - **Promotes confidence on cross-persona agreement** (two reviewers spotting the same issue raises priority)
 - Resolves contradictions (different personas disagree about what to do)
-- Auto-promotes safe-auto candidates that meet the bar
 - Routes by tier — applied fixes, gated/manual, FYI
 
 The output is one report with calibrated severity, evidence quotes, and explicit ownership — not a flat list of every reviewer's raw output.
