@@ -13,7 +13,7 @@
 # Independence is by PROVIDER, not CLI brand. A provider is reached by a ROUTE:
 # its dedicated CLI, or (for fixed grok-cursor / composer routes) cursor-agent. All
 # activated lenses run on ONE model per provider at high reasoning, except codex
-# on medium; composer's -fast tier is its ceiling (accepted exceptions).
+# on extra-high; composer's -fast tier is its ceiling (accepted exceptions).
 #
 # Usage:
 #   cross-model-doc-review.sh <host-provider> <candidates> <reviewer-name> \
@@ -79,10 +79,10 @@ log()  { printf '[cross-model-doc] %s\n' "$*" >&2; }
 skip() { log "$*"; exit 0; }   # non-blocking: announce reason, exit clean, no output
 
 # --- model + reasoning per provider ----------------------------------------
-# ONE model per provider at high reasoning, except codex on medium (supersedes
+# ONE model per provider at high reasoning, except codex on extra-high (supersedes
 # the old per-lens sol/terra split). Concrete IDs are the CURRENT instance of the
 # tier principle and the single maintenance point when model families change.
-M_CODEX="gpt-5.6-sol"          # codex CLI            (-c model_reasoning_effort="medium")
+M_CODEX="gpt-5.6-luna"         # codex CLI            (-c model_reasoning_effort="xhigh")
 M_CLAUDE="opus"                # claude CLI, Opus 4.8 (--effort high)
 M_GROK="grok-4.5"              # grok CLI             (--effort high)
 M_GROK_CURSOR="cursor-grok-4.5-high"  # fixed cursor-agent Grok route (current id)
@@ -181,7 +181,7 @@ extract_model_receipt() {   # <route>; reads the envelope in $PEERLOG, sets MODE
 # --- adapter argv (single source of truth for route flags) -----------------
 # Emits the CLI + flags one token per line. Read-only, no-prompt, least-privilege
 # (tool-less on claude/grok; read-only residual on codex/cursor-agent), and
-# codex medium + others high reasoning per R17. PEER_WORKDIR / RAW_OUT / PROMPT_FILE / SCHEMA_REF are
+# codex xhigh + others high reasoning per R17. PEER_WORKDIR / RAW_OUT / PROMPT_FILE / SCHEMA_REF are
 # resolved by the caller (placeholders in --emit-adapter mode); PEER_WORKDIR is the
 # per-peer empty cwd/workspace, kept separate from the shared fold-in dir RUN_DIR.
 # Peer routes write to RAW_OUT only; the final fold-in file (OUT) is published after normalize so an orphaned
@@ -192,7 +192,7 @@ adapter_argv() {
   case "$1" in
     codex)
       printf '%s\0' codex exec - -C "$PEER_WORKDIR" --skip-git-repo-check -s read-only \
-        -o "$RAW_OUT" -m "$(route_model codex)" -c 'model_reasoning_effort="medium"' -c 'hide_agent_reasoning=false'
+        -o "$RAW_OUT" -m "$(route_model codex)" -c 'model_reasoning_effort="xhigh"' -c 'hide_agent_reasoning=false'
       ;;
     claude)
       # --tools "" disables ALL built-in tools (allowlist deny-all, no denylist gap
@@ -461,7 +461,10 @@ DOC_BASENAME="$(basename "$DOC_PATH")"
 } > "$PROMPT_FILE"
 
 # --- run machinery: idle-timeout for streaming codex, hard cap for the rest --
-IDLE_SECS="${CROSS_MODEL_IDLE_SECS:-180}"
+# Idle cap must exceed the peer's worst-case silent turn: Codex --json is
+# event-line (not token) output, so a slow xhigh reasoning turn (Luna p95 ~242s,
+# max ~419s) can go quiet past a low cap and be reaped before turn.completed.
+IDLE_SECS="${CROSS_MODEL_IDLE_SECS:-480}"
 HARD_SECS="${CROSS_MODEL_HARD_SECS:-600}"
 TO_BIN="$(command -v gtimeout || command -v timeout || true)"
 
@@ -626,7 +629,7 @@ attempt_route() {   # <provider> <route>
   : > "$PEERLOG"; : > "$PEERERR"; rm -f "$RAW_OUT" "$OUT"
   build_cmd "$route"
   case "$route" in
-    codex)                 note="$(route_model "$route") (effort medium)" ;;
+    codex)                 note="$(route_model "$route") (effort xhigh)" ;;
     claude|grok-cli)       note="$(route_model "$route") (effort high)" ;;
     grok-cursor|composer)  note="$(route_model "$route")" ;;
     cursor)                note="auto (serving model unverified)" ;;
